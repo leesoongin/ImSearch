@@ -140,7 +140,7 @@ extension ViewController: UISearchBarDelegate{
     
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
         guard let text = searchController.searchBar.text else { return }
-        
+        self.scrollToTop()
         if text != "" && self.isValidQuery(query: text){
             // 검색어, page parameter 초기화
             self.viewModel.modifySearchParamQuery(query: text)
