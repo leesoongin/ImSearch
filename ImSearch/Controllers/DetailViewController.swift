@@ -8,6 +8,13 @@
 import UIKit
 import Kingfisher
 
+//MARK: - DetailView Controller Delegate
+protocol DetailViewControllerDelegate {
+    func loadDetailImage() // detail image load
+    func setNavigationTitle() // navigation title 텍스트 설정
+}
+
+//MARK: - Controller
 class DetailViewController: UIViewController {
     @IBOutlet weak var detailImageView: UIImageView!
     var detailImageURL: String?
@@ -24,7 +31,9 @@ class DetailViewController: UIViewController {
         loadDetailImage()
         setNavigationTitle()
     }
-    
+}
+//MARK: - DetailView Delegate
+extension DetailViewController: DetailViewControllerDelegate {
     func loadDetailImage(){
         if let imageURL = self.detailImageURL {
             detailImageView.kf.setImage(with: URL(string: imageURL))
@@ -36,7 +45,7 @@ class DetailViewController: UIViewController {
         }
     }
 }
-
+//MARK: - ScrollView Delegate
 extension DetailViewController: UIScrollViewDelegate{
     func viewForZooming(in scrollView: UIScrollView) -> UIView? {
         return self.detailImageView

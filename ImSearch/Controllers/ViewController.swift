@@ -10,17 +10,21 @@ import UIKit
 protocol SearchViewDelegate {
     func isValidQuery(query: String) -> Bool // 적합한 검색어인지 판별
     func beginPaging() // Paging
-    func setFalseToSearchControllerIsActive() // SearchController의 isActive -> false
+    func resignFirstResponderFromSearchController() // SearchController의 isActive -> false
     func scrollToTop() // 현재 보고있는 스크롤을 맨 위로
 }
 
 protocol SearchViewDataSource {
     func addSearchControllerInNavigationBar() // navigation bar에 searchController 넣기
+    func setNoSearchImage() // 검색 결과가 없다면 나올 이미지
     func lastPageAlert() // 마지막 페이지 alert
 }
 
 class ViewController: UIViewController {
     //MARK: - IBOulet
+    
+    @IBOutlet weak var noSearchView: UIView!
+    @IBOutlet weak var noSearchLabel: UILabel!
     @IBOutlet var searchController: UISearchController!
     @IBOutlet weak var collectionView: UICollectionView!{
         didSet{
@@ -37,6 +41,7 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         addSearchControllerInNavigationBar()
+        setNoSearchImage()
     }
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == "detailView"{
@@ -49,6 +54,10 @@ class ViewController: UIViewController {
             nextVC.modalPresentationStyle = .fullScreen
         }
     }
+    @IBAction func noSearchViewTabAction(_ sender: Any) {
+        self.resignFirstResponderFromSearchController()
+    }
+    
 }
 
 //MARK: - SearchView Delegate
@@ -78,8 +87,9 @@ extension ViewController: SearchViewDelegate{
     func scrollToTop(){
         self.collectionView.scrollToItem(at: IndexPath(index: 0), at: .top, animated: true)
     }
-    func setFalseToSearchControllerIsActive(){
-        self.searchController.isActive = false
+    func resignFirstResponderFromSearchController(){
+        self.searchController.searchBar.resignFirstResponder()
+//        self.searchController.isActive = false
     }
 }
 
@@ -99,6 +109,13 @@ extension ViewController: SearchViewDataSource{
         self.navigationItem.title = self.viewModel.getNavigationTitle()
         self.navigationItem.hidesSearchBarWhenScrolling = true //스크롤할때 searchbar 안숨기기 -> false
     }
+    func setNoSearchImage() {
+        if self.viewModel.getDocuments().count == 0{
+            self.noSearchLabel.text = "검색 결과가 존재하지 않습니다."
+        }else{
+            self.noSearchLabel.text = ""
+        }
+    }
     func lastPageAlert(){
         let alert = UIAlertController(title: "알림", message: "마지막 페이지입니다.", preferredStyle: .alert)
         let ok = UIAlertAction(title: "넹", style: .default) { (ok) in
@@ -115,6 +132,7 @@ extension ViewController: UISearchBarDelegate{
         self.viewModel.chageSearchParamSort(sort: selectedScope)
         self.manager.requestSearchImage(parameter: self.viewModel.getSearchParam()) { response in
             self.viewModel.modifySearchResultData(searchResultData: response)
+            self.setNoSearchImage()
             self.collectionView.reloadData()
             self.scrollToTop()
         }
@@ -133,6 +151,7 @@ extension ViewController: UISearchBarDelegate{
                     
                     DispatchQueue.main.async {
                         self.collectionView.reloadData()
+                        self.setNoSearchImage()
                     }
                 }//request
             } // dispatchQueue
@@ -162,10 +181,9 @@ extension ViewController: UICollectionViewDataSource{
 //MARK: - UICollectionView Delegate
 extension ViewController: UICollectionViewDelegate{
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        print("나오냐??")
     }
     func scrollViewWillEndDragging(_ scrollView: UIScrollView, withVelocity velocity: CGPoint, targetContentOffset: UnsafeMutablePointer<CGPoint>) {
-        setFalseToSearchControllerIsActive()
+        resignFirstResponderFromSearchController()
         
         let offsetY = scrollView.contentOffset.y
         let contentHeight = scrollView.contentSize.height
@@ -179,7 +197,7 @@ extension ViewController: UICollectionViewDelegate{
         }
     }
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        setFalseToSearchControllerIsActive()
+        resignFirstResponderFromSearchController()
     }
 }
 
@@ -198,21 +216,5 @@ extension ViewController: UICollectionViewDelegateFlowLayout{
 //MARK: - extension UISearchResultsUpdating
 extension ViewController: UISearchResultsUpdating{
     func updateSearchResults(for searchController: UISearchController) {
-//        if let text = searchController.searchBar.text{
-//            if text != "" && self.isValidQuery(query: text){
-//                self.viewModel.modifySearchParamQuery(query: text)
-//                DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 0.4) {
-//                    self.manager.requestSearchImage(parameter: self.viewModel.getSearchParam()){ response in // response -> resultData
-//                        self.viewModel.modifySearchResultData(searchResultData: response)
-//
-//                        DispatchQueue.main.async {
-//                            self.collectionView.reloadData()
-//                        } //inner dispatchQueue
-//                    }//request
-//
-////                    self.scrollToTop()
-//                } // dispatchQueue
-//            } //inner if
-//        } //if
     }//func
 }
