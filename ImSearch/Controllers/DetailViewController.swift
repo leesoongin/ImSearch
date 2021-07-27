@@ -36,6 +36,7 @@ class DetailViewController: UIViewController {
 extension DetailViewController: DetailViewControllerDelegate {
     func loadDetailImage(){
         if let imageURL = self.detailImageURL {
+            detailImageView.kf.indicatorType = .activity
             detailImageView.kf.setImage(with: URL(string: imageURL))
         }
     }

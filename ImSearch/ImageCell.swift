@@ -24,15 +24,7 @@ class ImageCell: UICollectionViewCell {
     
     func configure(imageURL: String,newWidth: CGFloat){
         let url = URL(string: imageURL)
-
-//        do{
-//            if let url = url {
-//                let data = try Data(contentsOf: url)
-//                imageViewForCell.image = UIImage(data: data)?.resize(newWidth: newWidth)
-//            }
-//        }catch{
-//            print("data fetch error")
-//        }
+        imageViewForCell.kf.indicatorType = .activity
         imageViewForCell.kf.setImage(with: url)
         
     }
