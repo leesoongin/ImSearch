@@ -14,8 +14,9 @@ class SearchResultViewModel {
     private var metaData: MetaData?
     private var documents: [Document] = [Document]()
     // 하나의 request parameter를 이용해서 값을 바꿔주며 api호출하는 식으로 해보자 일단
-    private var searchParam: SearchParam = SearchParam(query: "", sort: "", page: 1, size: 30)
+    private var searchParam: SearchParam = SearchParam(query: "", sort: "", page: 1, size: 80)
     private let scopeTitle: ScopeTitle = ScopeTitle()
+    private let navigationTitle: String = "이미지 검색"
     //MARK: - getter
     func getData() -> SearchResultData?{
         return self.searchResultData
@@ -35,7 +36,9 @@ class SearchResultViewModel {
     private func getScopeTitleValues() -> [String]{
         return scopeTitle.getScopeTitleValues()
     }
-    
+    func getNavigationTitle() -> String {
+        return self.navigationTitle
+    }
     
     //MARK: - searchParameter 새로고침
     func modifySearchParamQuery(query: String){
@@ -57,18 +60,19 @@ class SearchResultViewModel {
     func updateSearchParamPage(){
         self.searchParam.updatePage(page: self.searchParam.getPage())
     }
-    private func initialSearchParamPage(){
+    func initialSearchParamPage(){
         self.searchParam.initialPage()
     }
     //MARK: - Initializing SearchResultData, MetaData, Documents, RequestParmeter
     func modifySearchResultData(searchResultData: SearchResultData?){
         // data 새로고침
+        initialSearchParamPage()
         if let data = searchResultData {
             self.searchResultData = data
             // metaData, Document, request parameter 초기화
             modifyMetaData()
             modifyDocuments()
-            initialSearchParamPage()
+            
         }
     }
     private func modifyMetaData(){

@@ -11,6 +11,7 @@ import Kingfisher
 class DetailViewController: UIViewController {
     @IBOutlet weak var detailImageView: UIImageView!
     var detailImageURL: String?
+    var navigationTitle: String?
     
     @IBOutlet weak var scrollView: UIScrollView!{
         didSet{
@@ -21,11 +22,17 @@ class DetailViewController: UIViewController {
         super.viewDidLoad()
         
         loadDetailImage()
+        setNavigationTitle()
     }
     
     func loadDetailImage(){
         if let imageURL = self.detailImageURL {
             detailImageView.kf.setImage(with: URL(string: imageURL))
+        }
+    }
+    func setNavigationTitle(){
+        if let title = self.navigationTitle {
+            self.navigationItem.title = title
         }
     }
 }
