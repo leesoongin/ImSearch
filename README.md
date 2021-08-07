@@ -42,10 +42,17 @@ CocoaPods **`1.10.0`**
 
 
 >**DetailImageView**
-사진 자세히 보기
-확대
-내 앨범에 이미지 저장
+### **사진 자세히 보기**
+<p><img src="https://user-images.githubusercontent.com/55231029/128600755-7b70bd3a-67bc-4a8f-84d6-1c0752107524.GIF" width="250" height="500"></p>
+<br>
 
+### **확대**
+<p><img src="https://user-images.githubusercontent.com/55231029/128600788-0ad22cc2-f18e-4959-84aa-5a399d1391a7.GIF" width="250" height="500"></p>
+<br>
+
+### **내 앨범에 이미지 저장**
+<p><img src="https://user-images.githubusercontent.com/55231029/128600808-fed76abf-8684-40ae-a8ef-7330c5c4cc85.GIF" width="250" height="500"></p>
+<br>
 
 
 ---
