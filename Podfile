@@ -8,4 +8,5 @@ target 'ImSearch' do
   # Pods for ImSearch
   pod 'Alamofire', '~> 5.4'
   pod 'Kingfisher', '~> 6.0'
+  pod 'RxSwift', '6.2.0'
 end
