@@ -1,10 +1,29 @@
+
+
+
+
 # 목차
+
 - 프로젝트 소개
-    - 개발환경 및 라이브러리
-    - 실행화면
-    - 어려웠던 기능, 기능 구현을 위한 고민
+- 개발환경 및 라이브러리
+- 실행화면
+- 구현 기능
+- 모델, 아키텍쳐 구조 ( 작성 예정)
+- 어려웠던 기능, 기능 구현을 위한 고민
     
 ---
+
+# ImSearch
+
+[Kakao API](https://developers.kakao.com/docs/latest/ko/daum-search/dev-guide#search-image)  검색을 통한 이미지 검색 앱
+
+원하는 키워드로 검색하여 원하는 이미지를 다운받을 수 있습니다.
+
+<br>
+
+---
+
+<br>
 
 ## 개발환경 및 라이브러리
 ### 개발환경
@@ -20,16 +39,19 @@ CocoaPods **`1.10.0`**
 
 ---
 
+<br>
+
 ## 실행화면
 
 > 
-## **Home**
+### **Home**
+
 <p><img src="https://user-images.githubusercontent.com/55231029/128599647-66395c6d-17be-4ff4-a8c6-1d9708c9e681.PNG" width="250" height="500"></p>
 <br>
 <br>
 
 >
-## Search
+### Search
 
 ### 검색어 입력, 검색 결과 노출
 <p><img src="https://user-images.githubusercontent.com/55231029/128600129-0a1ecf02-be98-4b36-8c0d-e8e2583639b6.GIF" width="250" height="500"></p>
@@ -45,7 +67,7 @@ CocoaPods **`1.10.0`**
 
 
 >
-## DetailImageView
+### DetailImageView
 
 ### **사진 자세히 보기**
 <p><img src="https://user-images.githubusercontent.com/55231029/128600755-7b70bd3a-67bc-4a8f-84d6-1c0752107524.GIF" width="250" height="500"></p>
@@ -61,31 +83,84 @@ CocoaPods **`1.10.0`**
 
 
 ---
+<br>
+
+## 구현 기능
+
+- Kakao 이미지 검색 api를 이용한 이미지 검색
+- `검색 옵션` **(정확도 순, 최신 순)**, `페이징 구현` **(페이지당 이미지 80개)**
+- 디테일 이미지 뷰, 이미지 확대
+- 검색한 이미지 사진 앱에 저장
+
+<br>
+
+---
+
+<br>
+
+# 모델, 아키텍쳐 구조 ( 작성 예정)
 
 
-## 어려웠던 기능, 기능 구현을 위한 고민
 
-1. 검색어 입력 마다 api호출 
 
-- 입력마다의 api 호출은 비효율적. 
+<br>
 
-- Combine 의 Debounce, RxSwift 의 Debounce 를 이용해 api 호출 횟수를 최소화 할 수 있다는걸 알아냄
+---
 
-- Combine 의 Debounce 를 이용해 api 호출 최소화, 검색어마다의 검색 결과 도출(1초 간격)
 
-2. 이미지 로딩
+## 기능 구현을 위한 고민
 
-	- api 호출을 통해 이미지 URL을 받아와 Kingfisher 를 이용해 이미지 로드
-    
-	- Kingfisher에서 이미지 리사이징, 캐싱 기능을 지원해주지만 라이브러리를 사용하지 않고 직접 구현해보기로 함
-    
-	- 이미지 캐싱의 과정에 대해 알아봄
+### 1. 검색어 입력 마다 api호출 
+
+검색 완료 버튼 없이 사용자가 입력한 검색어를 검색어가 변경 될 때마다 그 결과를 화면에 뿌려주고자 했습니다. 하지만 검색어가 변경될 때 마다 api 를 호출하게 되면 호출 횟수가 매우 많아져 비효율적이라는 문제가 있었습니다. 
+
+빈번한 api호출을 막기 위해 Combine 의 Debounce(1초 간격) 를 이용해 api 호출 횟수를 최소화해서 검색을 수행했습니다.
+
+- Combine 의 Debounce 이용, 1초 동안의 이벤트 중 `가장 마지막 이벤트` 를 수행 
+
+```swift
+ func addSearchControllerObserver(){
+        self.searchController.searchBar.searchTextField
+            .myDebounceSearchPublisher
+            .sink { receivedValue in
+                self.requestSearchTermToAPI(searchTerm: receivedValue)
+            }
+            .store(in: &mySubscription)
+    }
+
+extension UISearchTextField {
+    var myDebounceSearchPublisher : AnyPublisher<String,Never>{
+        NotificationCenter.default.publisher(for: UISearchTextField.textDidChangeNotification, object: self)
+            // 노티피케이션 센터에서 UISearchTextField 가져옴
+            .compactMap { $0.object as? UISearchTextField }
+            //UISearchTextField 에서 text가져오기
+            .map{ $0.text ?? "" }
+            .debounce(for: .milliseconds(1000), scheduler: RunLoop.main)
+            .filter{ $0.count > 0 }
+            .print()
+            .eraseToAnyPublisher()
+    }
+}
+
+```
+
+### 2. 이미지 로딩
+
+`Kingfisher` 등 이미지 라이브러리를 이용하면 이미지 캐싱, 이미지 리사이징 등의 기능을 제공해주지만, 
+이번 프로젝트를 통해 이미지를 캐싱하는 흐름을 익히고자 직접 이미지 캐싱을 구현했습니다.
+
+1. api 호출 -> 이미지 URL을 받아옴
+
+2. 메모리 캐시에 이미지 이름을 키값으로 하는 이미지 파일이 존재하는지 체크, 
+**존재한다면** `이미지 로드`  or **존재하지 않는다면** `3` 으로 이동
+
+3. 디스크 캐시에 이미지 이름으로 하는 키값으로 하는 이미지 파일이 존재하는지 체크, 
+**존재한다면** `이미지 로드` + `메모리 캐시에 캐싱` or **존재하지 않는다면** `4` 으로 이동
+
+4. 이미지, 디스크 `캐시` 에 **이미지가 존재하지 않는 경우**이니 `이미지 URL` 을 통해 **이미지 로드** 
+로드한 이미지를 `메모리` , `디스크` 캐시에 **캐싱**
+
 	
-    ![](https://images.velog.io/images/tnddls2ek/post/94803536-e77a-4b0d-ba17-7dda430b9634/image.png)
-    
-	1. api 호출 -> 이미지 URL을 받아와서
-    2. 메모리 캐시에 이미지 이름을 키값으로 하는 이미지 파일이 존재하는지 체크, 존재한다면 이미지 로드  or 존재하지 않는다면 (3) 으로 이동
-    3. 디스크 캐시에 이미지 이름으로 하는 키값으로 하는 이미지 파일이 존재하는지 체크, 존재한다면 이미지 로드(+ 메모리 캐시에 캐싱) or 존재하지 않는다면 (4) 으로 이동
-    4. 이미지, 디스크 캐시에 이미지가 존재하지 않는 경우이니 이미지 URL을 통해 이미지 로드. 로드한 이미지를 메모리, 디스크 캐시에 캐싱
-    
-    위와 같은 과정을 통해 이미지를 load하는 collectionView의 Cell 부분에서 캐싱되어있는지 여부를 판단하여 캐싱된 데이터를 불러오거나, URL을 통해 이미지를 불러왔다.
+![](https://images.velog.io/images/tnddls2ek/post/94803536-e77a-4b0d-ba17-7dda430b9634/image.png)
+
+위와 같은 과정을 통해 **이미지를 load** 하는 **`collectionView 의 Cell`** 부분에서 **캐싱되어있는지 여부를 판단** 하여 `캐싱된 데이터` 를 **불러오거나**, `URL` 을 통해 **이미지를 불러왔습니다**
