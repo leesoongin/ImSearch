@@ -149,7 +149,13 @@
                             <constraint firstItem="Fvu-xT-4W2" firstAttribute="top" secondItem="xPq-MB-PCF" secondAttribute="top" id="pvz-vW-VbT"/>
                         </constraints>
                     </view>
-                    <navigationItem key="navigationItem" id="Jcu-F0-VdP"/>
+                    <navigationItem key="navigationItem" id="Jcu-F0-VdP">
+                        <barButtonItem key="rightBarButtonItem" title="저장" id="eqw-oT-VHQ">
+                            <connections>
+                                <action selector="saveImageToAlbum:" destination="tTI-Xd-E9t" id="FlJ-am-7a8"/>
+                            </connections>
+                        </barButtonItem>
+                    </navigationItem>
                     <connections>
                         <outlet property="detailImageView" destination="P7K-6C-Gbu" id="jOy-x6-d9B"/>
                         <outlet property="scrollView" destination="Fvu-xT-4W2" id="BaN-F6-9IS"/>
