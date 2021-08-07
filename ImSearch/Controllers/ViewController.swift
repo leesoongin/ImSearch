@@ -6,32 +6,44 @@
 //
 
 import UIKit
+import RxSwift
+import Combine
 
 protocol SearchViewDelegate {
-    func isValidQuery(query: String) -> Bool // 적합한 검색어인지 판별
     func beginPaging() // Paging
     func resignFirstResponderFromSearchController() // SearchController의 isActive -> false
+    func addSearchControllerObserver() // searchController에 observer add
+    func requestSearchTermToAPI(searchTerm: String) // 검색어 api 요청
     func scrollToTop() // 현재 보고있는 스크롤을 맨 위로
 }
 
 protocol SearchViewDataSource {
-    func addSearchControllerInNavigationBar() // navigation bar에 searchController 넣기
+    func setNavigationItem() // navigation item setting
     func setNoSearchImage() // 검색 결과가 없다면 나올 이미지
     func lastPageAlert() // 마지막 페이지 alert
 }
 
 class ViewController: UIViewController {
     //MARK: - IBOulet
-    
     @IBOutlet weak var noSearchView: UIView!
     @IBOutlet weak var noSearchLabel: UILabel!
-    @IBOutlet var searchController: UISearchController!
     @IBOutlet weak var collectionView: UICollectionView!{
         didSet{
             collectionView.delegate = self
             collectionView.dataSource = self
         }
     }
+    private lazy var searchController : UISearchController = {
+        let searchController = UISearchController()
+        searchController.searchBar.delegate = self
+        searchController.obscuresBackgroundDuringPresentation = false // 뒤에 안이쁘니까 지우자 ㅋㅋ
+        searchController.searchBar.scopeButtonTitles = self.viewModel.getScopeTitleKey()
+        searchController.searchBar.placeholder = "검색"
+        //        searchController.searchBar.showsScopeBar = true // scopebar 항상 나오기
+        //        searchController.hidesNavigationBarDuringPresentation = false // searchbar쓸때 네비게이션 타이틀 안숨기기
+        return searchController
+    }()
+    var mySubscription = Set<AnyCancellable>()
     
     //MARK: - Manager, ViewModel
     private let manager: KakaoSearchAPIManager = KakaoSearchAPIManager.shared
@@ -40,8 +52,9 @@ class ViewController: UIViewController {
     //MARK: - view LifeCycle
     override func viewDidLoad() {
         super.viewDidLoad()
-        addSearchControllerInNavigationBar()
+        setNavigationItem()
         setNoSearchImage()
+        addSearchControllerObserver()
     }
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == "detailView"{
@@ -62,10 +75,26 @@ class ViewController: UIViewController {
 
 //MARK: - SearchView Delegate
 extension ViewController: SearchViewDelegate{
-    func isValidQuery(query: String) -> Bool {
-        let queryRegEx = "^[가-힣a-zA-Z0-9 ]{1,15}$"
-        let test = NSPredicate(format: "SELF MATCHES %@", queryRegEx)
-        return test.evaluate(with: query)
+    func addSearchControllerObserver(){
+        self.searchController.searchBar.searchTextField
+            .myDebounceSearchPublisher
+            .sink { receivedValue in
+                self.requestSearchTermToAPI(searchTerm: receivedValue)
+            }
+            .store(in: &mySubscription)
+    }
+    func requestSearchTermToAPI(searchTerm: String) {
+        self.scrollToTop()
+
+        self.viewModel.modifySearchParamQuery(query: searchTerm)
+        self.viewModel.initialSearchParamPage()
+        self.manager.requestSearchImage(parameter: self.viewModel.getSearchParam()){ response in // response -> resultData
+            self.viewModel.modifySearchResultData(searchResultData: response)
+            DispatchQueue.main.async {
+                self.collectionView.reloadData()
+                self.setNoSearchImage()
+            }
+        }//request
     }
     func beginPaging(){
         guard let isEnd = self.viewModel.getMetaData()?.is_end else { return }
@@ -89,22 +118,12 @@ extension ViewController: SearchViewDelegate{
     }
     func resignFirstResponderFromSearchController(){
         self.searchController.searchBar.resignFirstResponder()
-//        self.searchController.isActive = false
     }
 }
 
 //MARK: - SearchView DataSource
 extension ViewController: SearchViewDataSource{
-    func addSearchControllerInNavigationBar(){
-        searchController = UISearchController(searchResultsController: nil)
-        searchController.searchBar.delegate = self
-        searchController.searchResultsUpdater = self // 입력란 업데이트마다 콜백 메서드
-        searchController.obscuresBackgroundDuringPresentation = false // 뒤에 안이쁘니까 지우자 ㅋㅋ
-        searchController.searchBar.scopeButtonTitles = self.viewModel.getScopeTitleKey()
-        searchController.searchBar.placeholder = "검색"
-//        searchController.searchBar.showsScopeBar = true // scopebar 항상 나오기
-//        searchController.hidesNavigationBarDuringPresentation = false // searchbar쓸때 네비게이션 타이틀 안숨기기
-        
+    func setNavigationItem(){
         self.navigationItem.searchController = searchController
         self.navigationItem.title = self.viewModel.getNavigationTitle()
         self.navigationItem.hidesSearchBarWhenScrolling = true //스크롤할때 searchbar 안숨기기 -> false
@@ -137,26 +156,6 @@ extension ViewController: UISearchBarDelegate{
             self.scrollToTop()
         }
     }
-    
-    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-        guard let text = searchController.searchBar.text else { return }
-        self.scrollToTop()
-        if text != "" && self.isValidQuery(query: text){
-            // 검색어, page parameter 초기화
-            self.viewModel.modifySearchParamQuery(query: text)
-            self.viewModel.initialSearchParamPage()
-            DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 0.4) {
-                self.manager.requestSearchImage(parameter: self.viewModel.getSearchParam()){ response in // response -> resultData
-                    self.viewModel.modifySearchResultData(searchResultData: response)
-                    
-                    DispatchQueue.main.async {
-                        self.collectionView.reloadData()
-                        self.setNoSearchImage()
-                    }
-                }//request
-            } // dispatchQueue
-        } //if
-    }//delegate
 }
 
 //MARK: - UICollectionview DataSource
@@ -209,12 +208,22 @@ extension ViewController: UICollectionViewDelegateFlowLayout{
         let width: CGFloat = (self.view.frame.width - (margin * 2)) / 3
         let height: CGFloat = width
         
+        print("view width -----> \(self.view.frame.width) , cell width ----> \(width)")
+        
         return CGSize(width: width, height: height)
     }
 }
-
-//MARK: - extension UISearchResultsUpdating
-extension ViewController: UISearchResultsUpdating{
-    func updateSearchResults(for searchController: UISearchController) {
-    }//func
+extension UISearchTextField {
+    var myDebounceSearchPublisher : AnyPublisher<String,Never>{
+        NotificationCenter.default.publisher(for: UISearchTextField.textDidChangeNotification, object: self)
+            // 노티피케이션 센터에서 UISearchTextField 가져옴
+            .compactMap { $0.object as? UISearchTextField }
+            //UISearchTextField 에서 text가져오기
+            .map{ $0.text ?? "" }
+            .debounce(for: .milliseconds(1000), scheduler: RunLoop.main)
+            .filter{ $0.count > 0 }
+            .print()
+            .eraseToAnyPublisher()
+    }
 }
+
