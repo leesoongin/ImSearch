@@ -23,21 +23,20 @@ CocoaPods **`1.10.0`**
 ## 실행화면
 
 >**Home**
-![IMG_9145](https://user-images.githubusercontent.com/55231029/128599647-66395c6d-17be-4ff4-a8c6-1d9708c9e681.PNG)
-
-<!-- <p><img src="https://user-images.githubusercontent.com/55231029/128600129-0a1ecf02-be98-4b36-8c0d-e8e2583639b6.GIF" width="250" height="450">
-<img src="https://user-images.githubusercontent.com/55231029/120976181-0d385f80-c7ad-11eb-9b11-bb698cfa5d05.PNG" width="250" height="450"></p>
- -->
+<p><img src="https://user-images.githubusercontent.com/55231029/128599647-66395c6d-17be-4ff4-a8c6-1d9708c9e681.PNG" width="250" height="500"></p>
 
 >**Search**
 1. 검색어 입력, 검색 결과 노출
-<p><img src="https://user-images.githubusercontent.com/55231029/128600129-0a1ecf02-be98-4b36-8c0d-e8e2583639b6.GIF" width="250" height="450"></p>
+<p><img src="https://user-images.githubusercontent.com/55231029/128600129-0a1ecf02-be98-4b36-8c0d-e8e2583639b6.GIF" width="250" height="500"></p>
+<br>
 
 2. 검색 옵션에 따른 검색 결과
-![IMB_KDVGmh](https://user-images.githubusercontent.com/55231029/128600230-49b7d7fc-34f7-4e05-9f21-a7b8eae41ed0.GIF)
+<p><img src="https://user-images.githubusercontent.com/55231029/128600230-49b7d7fc-34f7-4e05-9f21-a7b8eae41ed0.GIF" width="250" height="500"></p>
+<br>
 
 3. 페이징 
-![IMB_JQFfQP](https://user-images.githubusercontent.com/55231029/128600218-c1136c85-2a18-458a-8769-42e3eee0be29.GIF)
+<p><img src="https://user-images.githubusercontent.com/55231029/128600218-c1136c85-2a18-458a-8769-42e3eee0be29.GIF" width="250" height="500"></p>
+<br>
 
 
 >**DetailImageView**
