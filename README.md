@@ -162,7 +162,7 @@ extension UISearchTextField {
 
 <br>
 
-- **메모리, 디스크 캐싱 **
+- ** 이미지 캐싱 과정 **
 ```swift
 func configure(imageURL: String,newWidth: CGFloat){
 //        TODO: 1. 메모리 캐시에 이미지가 존재하는지 확인, 존재한다면 이미지 로드
@@ -174,8 +174,12 @@ func configure(imageURL: String,newWidth: CGFloat){
             }
         }
     }
-
+```
+```swift
 extension UIImageView {
+```
+-  메모리 캐시에서 이미지 로드
+```swift
     func setCacheImageFromMemory(_ url: String) -> Bool{
         guard let url = URL(string: url) else { return false}
         
@@ -187,7 +191,11 @@ extension UIImageView {
         }
         return false  // 캐시에 이미지가 존재하지 않았다면 false return
     }
-    
+```
+
+- 디스크 캐시에서 이미지 로드
+
+```swift
     //TODO: 1. 기본적으로 제공되는 cache 폴더 경로 불러오기
     //TODO: 2. 파일 이름으로 filePath의 path 설정
     //TODO: 3. 해당 path에 파일이 존재하지 않는다면 retrun false   /  존재한다면 캐시에서 이미지 불러오고 메모리에 캐싱, return true
@@ -221,6 +229,11 @@ extension UIImageView {
         return false
     }
     
+```
+- URL 을 통한 이미지  load, + **`메모리 캐싱`, `디스크 캐싱`**
+
+
+```swift
     func setImageFromURL(_ url: String){
         if let url = URL(string: url) {
             if let path = NSSearchPathForDirectoriesInDomains(.cachesDirectory, .userDomainMask, true).first {
@@ -255,5 +268,8 @@ extension UIImageView {
 
 	
 ![](https://images.velog.io/images/tnddls2ek/post/94803536-e77a-4b0d-ba17-7dda430b9634/image.png)
+
+<br>
+<br>
 
 위와 같은 과정을 통해 **이미지를 load** 하는 **`collectionView 의 Cell`** 부분에서 **캐싱되어있는지 여부를 판단** 하여 `캐싱된 데이터` 를 **불러오거나**, `URL` 을 통해 **이미지를 불러왔습니다**
